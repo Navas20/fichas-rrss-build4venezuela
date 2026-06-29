@@ -1,0 +1,18 @@
+﻿{
+    "name":  "fichas-rrss",
+    "version":  "1.0.0",
+    "description":  "",
+    "main":  "app.js",
+    "scripts":  {
+                    "test":  "echo \"Error: no test specified\" \u0026\u0026 exit 1"
+                },
+    "keywords":  [
+
+                 ],
+    "author":  "",
+    "license":  "ISC",
+    "type":  "commonjs",
+    "devDependencies":  {
+                            "http-server":  "^14.1.1"
+                        }
+}

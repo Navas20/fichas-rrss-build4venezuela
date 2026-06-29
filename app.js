@@ -38,7 +38,7 @@
 
   /* ---------- State ---------- */
   const STORAGE_KEY = 'fichas-rrss-data';
-  let currentPhoto = null; // Image or null
+  let currentPhoto = null;
 
   /* ---------- Persistence ---------- */
   function saveState() {
@@ -49,11 +49,11 @@
       location: locationInput.value,
       contact: contactInput.value,
       desc: descInput.value,
-      photo: currentPhoto ? currentPhoto.src : null,
+      hasPhoto: currentPhoto !== null,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (_) { /* quota exceeded, ignore */ }
+    } catch (_) {}
   }
 
   function restoreState() {
@@ -67,18 +67,11 @@
       locationInput.value = data.location || '';
       contactInput.value = data.contact || '';
       descInput.value = data.desc || '';
-      if (data.photo) {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          currentPhoto = img;
-          showPhotoPreview(img);
-          generateCard();
-        };
-        img.onerror = () => { /* photo not available offline */ };
-        img.src = data.photo;
+      if (data.hasPhoto) {
+        showToast('La foto no se conserva al recargar. Vuelve a subirla para generar la ficha.', '');
+        if (hasRequiredFields()) actionsContainer.hidden = false;
       }
-    } catch (_) { /* corrupted data, ignore */ }
+    } catch (_) {}
   }
 
   /* ---------- Theme ---------- */
@@ -237,22 +230,23 @@
   }
 
   /* ---------- Canvas rendering ---------- */
-  function wrapText(context, text, x, y, maxWidth, lineHeight) {
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
     const lines = [];
-    const chars = text.split('');
     let line = '';
-    for (let i = 0; i < chars.length; i++) {
-      const testLine = line + chars[i];
-      if (testLine.length > maxWidth && line.length > 0) {
+    for (let i = 0; i < words.length; i++) {
+      const testLine = line ? line + ' ' + words[i] : words[i];
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && line) {
         lines.push(line);
-        line = chars[i];
+        line = words[i];
       } else {
         line = testLine;
       }
     }
     if (line) lines.push(line);
     for (let i = 0; i < lines.length; i++) {
-      context.fillText(lines[i], x, y + i * lineHeight);
+      ctx.fillText(lines[i], x, y + i * lineHeight);
     }
     return lines.length;
   }
@@ -438,13 +432,21 @@
   function generateCard() {
     showLoading(true);
 
-    // Use requestAnimationFrame for smoother render
-    requestAnimationFrame(() => {
-      renderCard(currentPhoto);
-      showLoading(false);
-      actionsContainer.hidden = false;
-      saveState();
-    });
+    const doRender = () => {
+      requestAnimationFrame(() => {
+        renderCard(currentPhoto);
+        showLoading(false);
+        actionsContainer.hidden = false;
+        downloadBtn.focus();
+        saveState();
+      });
+    };
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(doRender).catch(doRender);
+    } else {
+      setTimeout(doRender, 100);
+    }
   }
 
   function showLoading(show) {
@@ -541,18 +543,20 @@
   /* ---------- Init ---------- */
   initTheme();
 
-  // Restore saved state after DOM render
-  requestAnimationFrame(() => {
+  function initApp() {
     restoreState();
-  });
 
-  // If no saved state, show placeholder canvas
-  if (!localStorage.getItem(STORAGE_KEY)) {
-    // Draw initial empty card
-    renderCard(null);
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => renderCard(null)).catch(() => renderCard(null));
+      } else {
+        renderCard(null);
+      }
+    }
   }
 
-  // Keyboard shortcut: Ctrl+Enter to generate
+  requestAnimationFrame(initApp);
+
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
