@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fichas RRSS - Build4Venezuela</title>
+  <meta name="description" content="Generador de fichas de búsqueda estandarizadas para redes sociales. Crea y comparte fichas 1:1 para Instagram y WhatsApp." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="header-content">
+      <h1 class="header-title">
+        <span class="header-icon" aria-hidden="true">&#128247;</span>
+        Fichas RRSS
+      </h1>
+      <p class="header-subtitle">Generador de fichas de búsqueda 1:1 para Instagram y WhatsApp</p>
+    </div>
+    <button
+      id="themeToggle"
+      class="theme-toggle"
+      aria-label="Cambiar tema claro/oscuro"
+      type="button"
+    >
+      <span class="theme-icon" aria-hidden="true">&#9789;</span>
+    </button>
+  </header>
+
+  <main class="main" role="main">
+    <div class="layout">
+      <section class="form-section" aria-labelledby="form-title">
+        <h2 id="form-title" class="section-title">Datos de la persona</h2>
+
+        <form id="cardForm" class="form" novalidate>
+          <div class="form-group">
+            <label for="photoInput" class="form-label">Foto</label>
+            <div class="photo-upload" role="button" tabindex="0" aria-label="Seleccionar foto">
+              <div class="photo-placeholder" id="photoPlaceholder">
+                <span class="photo-icon" aria-hidden="true">&#128444;</span>
+                <span class="photo-text">Haz clic o arrastra una foto</span>
+                <span class="photo-hint">PNG o JPG, máx 5 MB</span>
+              </div>
+              <img id="photoPreview" class="photo-preview hidden" alt="Vista previa de la foto" />
+              <input
+                type="file"
+                id="photoInput"
+                class="hidden-input"
+                accept="image/png,image/jpeg,image/webp"
+                aria-hidden="true"
+              />
+            </div>
+            <span id="photoError" class="form-error hidden" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="nameInput" class="form-label">Nombre completo <span class="required" aria-hidden="true">*</span></label>
+            <input type="text" id="nameInput" class="form-input" placeholder="Ej: María Pérez" required maxlength="60" aria-required="true" />
+            <span id="nameError" class="form-error hidden" role="alert"></span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ageInput" class="form-label">Edad</label>
+              <input type="number" id="ageInput" class="form-input" placeholder="Ej: 25" min="0" max="150" />
+            </div>
+            <div class="form-group">
+              <label for="genderInput" class="form-label">Sexo</label>
+              <select id="genderInput" class="form-input">
+                <option value="">Seleccionar</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Masculino">Masculino</option>
+                <option value="No especifica">No especifica</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="locationInput" class="form-label">Último lugar visto</label>
+            <input type="text" id="locationInput" class="form-input" placeholder="Ej: Caracas, sector Los Dos Caminos" maxlength="120" />
+          </div>
+
+          <div class="form-group">
+            <label for="contactInput" class="form-label">Contacto <span class="required" aria-hidden="true">*</span></label>
+            <input type="text" id="contactInput" class="form-input" placeholder="Ej: +58 412 123 4567" required maxlength="60" aria-required="true" />
+            <span id="contactError" class="form-error hidden" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="descInput" class="form-label">Descripción adicional</label>
+            <textarea id="descInput" class="form-input form-textarea" placeholder="Ej: Vestía camisa azul, tiene un tatuaje en el brazo derecho..." maxlength="200" rows="2"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="generateBtn">
+            <span class="btn-icon" aria-hidden="true">&#9889;</span>
+            Generar ficha
+          </button>
+        </form>
+      </section>
+
+      <section class="preview-section" aria-labelledby="preview-title">
+        <h2 id="preview-title" class="section-title">Vista previa</h2>
+
+        <div class="card-wrapper" id="cardWrapper">
+          <div class="card-loading hidden" id="cardLoading" role="status">
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Generando ficha...</span>
+          </div>
+          <div class="card-container" id="cardContainer">
+            <canvas id="cardCanvas" class="card-canvas" width="1080" height="1080" aria-label="Ficha de búsqueda generada"></canvas>
+          </div>
+        </div>
+
+        <div class="actions" id="actionsContainer" hidden>
+          <button type="button" class="btn btn-secondary" id="downloadBtn">
+            <span class="btn-icon" aria-hidden="true">&#11015;</span>
+            Descargar PNG
+          </button>
+          <button type="button" class="btn btn-secondary" id="copyBtn">
+            <span class="btn-icon" aria-hidden="true">&#128203;</span>
+            Copiar imagen
+          </button>
+          <button type="button" class="btn btn-ghost" id="resetBtn">
+            <span class="btn-icon" aria-hidden="true">&#8635;</span>
+            Nueva ficha
+          </button>
+        </div>
+
+        <div id="toast" class="toast hidden" role="alert" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <p class="footer-text">
+      Hecho para <a href="https://build4venezuela.com" target="_blank" rel="noopener" class="footer-link">Build4Venezuela</a>
+      &mdash; Código que salva vidas
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
