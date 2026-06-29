@@ -2,14 +2,9 @@
 <html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fichas RRSS - Build4Venezuela</title>
   <meta name="description" content="Generador de fichas de búsqueda estandarizadas para redes sociales. Crea y comparte fichas 1:1 para Instagram y WhatsApp." />
-  <meta name="theme-color" content="#0f0f11" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Fichas RRSS" />
-  <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -98,28 +93,6 @@
             <textarea id="descInput" class="form-input form-textarea" placeholder="Ej: Vestía camisa azul, tiene un tatuaje en el brazo derecho..." maxlength="200" rows="2"></textarea>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Estilo de ficha</label>
-            <div class="template-selector" id="templateSelector" role="radiogroup" aria-label="Estilo de ficha">
-              <label class="template-option" data-template="dark" tabindex="0" role="radio" aria-checked="true">
-                <span class="template-swatch dark-swatch" aria-hidden="true"></span>
-                <span class="template-label">Oscuro</span>
-              </label>
-              <label class="template-option" data-template="light" tabindex="0" role="radio" aria-checked="false">
-                <span class="template-swatch light-swatch" aria-hidden="true"></span>
-                <span class="template-label">Claro</span>
-              </label>
-              <label class="template-option" data-template="warm" tabindex="0" role="radio" aria-checked="false">
-                <span class="template-swatch warm-swatch" aria-hidden="true"></span>
-                <span class="template-label">Solidaridad</span>
-              </label>
-              <label class="template-option" data-template="ocean" tabindex="0" role="radio" aria-checked="false">
-                <span class="template-swatch ocean-swatch" aria-hidden="true"></span>
-                <span class="template-label">Esperanza</span>
-              </label>
-            </div>
-          </div>
-
           <button type="submit" class="btn btn-primary" id="generateBtn">
             <span class="btn-icon" aria-hidden="true">&#9889;</span>
             Generar ficha
@@ -135,7 +108,7 @@
             <span class="spinner" aria-hidden="true"></span>
             <span>Generando ficha...</span>
           </div>
-          <div class="card-container card-fade-in" id="cardContainer">
+          <div class="card-container" id="cardContainer">
             <canvas id="cardCanvas" class="card-canvas" width="1080" height="1080" aria-label="Ficha de búsqueda generada"></canvas>
           </div>
         </div>

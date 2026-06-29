@@ -38,76 +38,7 @@
 
   /* ---------- State ---------- */
   const STORAGE_KEY = 'fichas-rrss-data';
-  const TEMPLATE_KEY = 'fichas-rrss-template';
   let currentPhoto = null;
-
-  /* ---------- Templates ---------- */
-  const TEMPLATES = {
-    dark: {
-      bg: '#1a1a24', accent: '#6366f1', text: '#f0f0f5',
-      secondary: '#a0a0b0', muted: '#6b6b7b',
-      gradFrom: '#6366f1', gradTo: '#8b5cf6',
-      divider: 'rgba(255,255,255,0.06)',
-      border: 'rgba(255,255,255,0.12)',
-      glow: 'rgba(99,102,241,0.08)',
-    },
-    light: {
-      bg: '#ffffff', accent: '#4f46e5', text: '#1a1a2e',
-      secondary: '#555570', muted: '#9999aa',
-      gradFrom: '#4f46e5', gradTo: '#7c3aed',
-      divider: 'rgba(0,0,0,0.08)',
-      border: 'rgba(0,0,0,0.12)',
-      glow: 'rgba(79,70,229,0.06)',
-    },
-    warm: {
-      bg: '#1c1510', accent: '#f59e0b', text: '#fdf8f0',
-      secondary: '#d4a574', muted: '#8a6e4e',
-      gradFrom: '#f59e0b', gradTo: '#ef4444',
-      divider: 'rgba(255,255,255,0.08)',
-      border: 'rgba(255,255,255,0.12)',
-      glow: 'rgba(245,158,11,0.08)',
-    },
-    ocean: {
-      bg: '#0f1a1e', accent: '#06b6d4', text: '#ecfeff',
-      secondary: '#67e8f9', muted: '#4a8a94',
-      gradFrom: '#06b6d4', gradTo: '#3b82f6',
-      divider: 'rgba(255,255,255,0.06)',
-      border: 'rgba(255,255,255,0.12)',
-      glow: 'rgba(6,182,212,0.08)',
-    },
-  };
-
-  function getCurrentTemplate() {
-    return document.querySelector('.template-option[aria-checked="true"]')?.getAttribute('data-template') || 'dark';
-  }
-
-  function setTemplate(name) {
-    const opts = document.querySelectorAll('.template-option');
-    opts.forEach(el => {
-      const isChecked = el.getAttribute('data-template') === name;
-      el.setAttribute('aria-checked', isChecked ? 'true' : 'false');
-    });
-    try { localStorage.setItem(TEMPLATE_KEY, name); } catch (_) {}
-  }
-
-  function initTemplate() {
-    const saved = localStorage.getItem(TEMPLATE_KEY) || 'dark';
-    setTemplate(saved);
-  }
-
-  document.querySelectorAll('.template-option').forEach(el => {
-    el.addEventListener('click', function () {
-      const name = this.getAttribute('data-template');
-      setTemplate(name);
-      if (hasRequiredFields()) generateCard();
-    });
-    el.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        this.click();
-      }
-    });
-  });
 
   /* ---------- Persistence ---------- */
   function saveState() {
@@ -119,7 +50,6 @@
       contact: contactInput.value,
       desc: descInput.value,
       hasPhoto: currentPhoto !== null,
-      template: getCurrentTemplate(),
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -137,7 +67,6 @@
       locationInput.value = data.location || '';
       contactInput.value = data.contact || '';
       descInput.value = data.desc || '';
-      if (data.template) setTemplate(data.template);
       if (data.hasPhoto) {
         showToast('La foto no se conserva al recargar. Vuelve a subirla para generar la ficha.', '');
         if (hasRequiredFields()) actionsContainer.hidden = false;
@@ -346,33 +275,39 @@
   function renderCard(photoImg) {
     const W = 1080;
     const H = 1080;
-    const tpl = TEMPLATES[getCurrentTemplate()] || TEMPLATES.dark;
+
+    // Dark premium card
+    const bgColor = '#1a1a24';
+    const accentColor = '#6366f1';
+    const textColor = '#f0f0f5';
+    const secondaryText = '#a0a0b0';
+    const mutedColor = '#6b6b7b';
 
     ctx.clearRect(0, 0, W, H);
 
     // Background
-    ctx.fillStyle = tpl.bg;
+    ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, W, H);
 
     // Subtle radial gradient overlay
     const grad = ctx.createRadialGradient(540, 400, 100, 540, 400, 700);
-    grad.addColorStop(0, tpl.glow);
-    grad.addColorStop(0.6, tpl.glow.replace('0.08', '0.03').replace('0.06', '0.02'));
+    grad.addColorStop(0, 'rgba(99, 102, 241, 0.08)');
+    grad.addColorStop(0.6, 'rgba(99, 102, 241, 0.03)');
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
 
     // Top accent bar
-    ctx.fillStyle = tpl.accent;
+    ctx.fillStyle = accentColor;
     ctx.fillRect(0, 0, W, 6);
 
-    // Watermark top-right
-    ctx.fillStyle = tpl.muted;
+    // Build4Venezuela watermark top-right
+    ctx.fillStyle = mutedColor;
     ctx.font = '500 18px "Inter", sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText('BUILD4VENEZUELA', W - 50, 50);
 
-    // Photo
+    // Photo circle
     const photoSize = 260;
     const photoX = (W - photoSize) / 2;
     const photoY = 110;
@@ -383,46 +318,56 @@
     if (photoImg) {
       ctx.drawImage(photoImg, photoX, photoY, photoSize, photoSize);
     } else {
-      const g2 = ctx.createLinearGradient(photoX, photoY, photoX + photoSize, photoY + photoSize);
-      g2.addColorStop(0, tpl.gradFrom);
-      g2.addColorStop(1, tpl.gradTo);
-      ctx.fillStyle = g2;
+      // Fallback: initials with gradient
+      const grad2 = ctx.createLinearGradient(photoX, photoY, photoX + photoSize, photoY + photoSize);
+      grad2.addColorStop(0, '#6366f1');
+      grad2.addColorStop(1, '#8b5cf6');
+      ctx.fillStyle = grad2;
       ctx.fillRect(photoX, photoY, photoSize, photoSize);
 
       const initials = nameInput.value.trim()
-        .split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
+        .split(' ')
+        .map(w => w[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join('')
+        .toUpperCase() || '?';
+
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 100px "Inter", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(initials, W / 2, photoY + photoSize / 2 + 4);
     }
+
     ctx.restore();
 
-    // Photo border
+    // Photo border circle
     ctx.beginPath();
     ctx.arc(W / 2, photoY + photoSize / 2, photoSize / 2 + 4, 0, Math.PI * 2);
-    ctx.strokeStyle = tpl.border;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 4;
     ctx.stroke();
 
     // Name
-    ctx.fillStyle = tpl.text;
+    ctx.fillStyle = textColor;
     ctx.font = 'bold 56px "Inter", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
+
     const name = nameInput.value.trim() || 'Nombre completo';
-    const displayName = name.length > 14 ? name.substring(0, 14) + '...' : name;
+    const maxName = 14;
+    const displayName = name.length > maxName ? name.substring(0, maxName) + '...' : name;
     ctx.fillText(displayName, W / 2, photoY + photoSize + 36);
 
-    // Age & Gender
+    // Age & Gender line
     const age = ageInput.value.trim();
     const gender = genderInput.value;
     const details = [];
     if (age) details.push(age + ' años');
     if (gender) details.push(gender);
     if (details.length > 0) {
-      ctx.fillStyle = tpl.secondary;
+      ctx.fillStyle = secondaryText;
       ctx.font = '500 26px "Inter", sans-serif';
       ctx.fillText(details.join(' · '), W / 2, photoY + photoSize + 102);
     }
@@ -430,52 +375,55 @@
     // Location
     const loc = locationInput.value.trim();
     if (loc) {
-      ctx.fillStyle = tpl.secondary;
+      ctx.fillStyle = secondaryText;
       ctx.font = '500 24px "Inter", sans-serif';
-      const displayLoc = loc.length > 30 ? loc.substring(0, 30) + '...' : loc;
-      ctx.fillText('\uD83D\uDCCD ' + displayLoc, W / 2, photoY + photoSize + 148);
+      const maxLoc = 30;
+      const displayLoc = loc.length > maxLoc ? loc.substring(0, maxLoc) + '...' : loc;
+      // Location icon
+      ctx.fillText('📍 ' + displayLoc, W / 2, photoY + photoSize + 148);
     }
 
-    // Divider
+    // Divider line
     const dividerY = photoY + photoSize + 200;
-    ctx.strokeStyle = tpl.divider;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(160, dividerY);
     ctx.lineTo(W - 160, dividerY);
     ctx.stroke();
 
-    // Contact
-    ctx.fillStyle = tpl.muted;
+    // Contact label + value
+    ctx.fillStyle = mutedColor;
     ctx.font = '500 20px "Inter", sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText('CONTACTO', 160, dividerY + 32);
+
     const contact = contactInput.value.trim() || 'Sin contacto';
-    ctx.fillStyle = tpl.text;
+    ctx.fillStyle = textColor;
     ctx.font = '600 28px "Inter", sans-serif';
     ctx.fillText(contact, 160, dividerY + 68);
 
     // Description
     const desc = descInput.value.trim();
     if (desc) {
-      ctx.fillStyle = tpl.secondary;
+      ctx.fillStyle = secondaryText;
       ctx.font = '500 22px "Inter", sans-serif';
       ctx.textAlign = 'left';
       wrapText(ctx, desc, 160, dividerY + 120, 760, 34);
     }
 
-    // Bottom accent
-    ctx.fillStyle = tpl.accent;
+    // Bottom accent bar
+    ctx.fillStyle = accentColor;
     ctx.fillRect(0, H - 6, W, 6);
 
-    // Footer
-    ctx.fillStyle = tpl.muted;
+    // Footer text
+    ctx.fillStyle = mutedColor;
     ctx.font = '400 16px "Inter", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('build4venezuela.com \u00B7 Comparte esta ficha', W / 2, H - 48);
+    ctx.fillText('build4venezuela.com · Comparte esta ficha', W / 2, H - 48);
 
-    // Corner mark
-    ctx.fillStyle = tpl.glow;
+    // QR-like decorative element bottom-right
+    ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
     ctx.font = 'bold 24px "Inter", sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText('B4V', W - 50, H - 48);
@@ -488,17 +436,7 @@
       requestAnimationFrame(() => {
         renderCard(currentPhoto);
         showLoading(false);
-
-        // Trigger animations
-        cardContainer.classList.remove('card-fade-in');
-        void cardContainer.offsetWidth;
-        cardContainer.classList.add('card-fade-in');
-
-        actionsContainer.classList.remove('actions-fade-in');
-        void actionsContainer.offsetWidth;
-        actionsContainer.classList.add('actions-fade-in');
         actionsContainer.hidden = false;
-
         downloadBtn.focus();
         saveState();
       });
