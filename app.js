@@ -29,6 +29,7 @@
   const downloadBtn = $('downloadBtn');
   const copyBtn = $('copyBtn');
   const resetBtn = $('resetBtn');
+  const whatsappBtn = $('whatsappBtn');
   const toast = $('toast');
   const themeToggle = $('themeToggle');
 
@@ -251,6 +252,34 @@
     return lines.length;
   }
 
+  function generateQRCanvas(text, size) {
+    try {
+      const qr = QRCode(0, 'M');
+      qr.addData(text);
+      qr.make();
+      const modCount = qr.getModuleCount();
+      const cellSize = Math.floor(size / modCount);
+      const actualSize = cellSize * modCount;
+      const qrCanvas = document.createElement('canvas');
+      qrCanvas.width = actualSize;
+      qrCanvas.height = actualSize;
+      const qrCtx = qrCanvas.getContext('2d');
+      qrCtx.fillStyle = '#ffffff';
+      qrCtx.fillRect(0, 0, actualSize, actualSize);
+      qrCtx.fillStyle = '#000000';
+      for (let r = 0; r < modCount; r++) {
+        for (let c = 0; c < modCount; c++) {
+          if (qr.isDark(r, c)) {
+            qrCtx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+      return qrCanvas;
+    } catch (_) {
+      return null;
+    }
+  }
+
   function drawRoundedRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -422,11 +451,18 @@
     ctx.textAlign = 'center';
     ctx.fillText('build4venezuela.com · Comparte esta ficha', W / 2, H - 48);
 
-    // QR-like decorative element bottom-right
-    ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
-    ctx.font = 'bold 24px "Inter", sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('B4V', W - 50, H - 48);
+    // QR code (escanea para contactar por WhatsApp)
+    const rawContact = contactInput.value.trim();
+    const cleanContact = rawContact.replace(/[^0-9]/g, '');
+    if (cleanContact) {
+      const qrCanvas = generateQRCanvas('https://wa.me/' + cleanContact, 120);
+      if (qrCanvas) {
+        const qrSize = 120;
+        const qrX = W - qrSize - 50;
+        const qrY = H - qrSize - 80;
+        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+      }
+    }
   }
 
   function generateCard() {
@@ -489,6 +525,40 @@
     }
   }
 
+  /* ---------- WhatsApp share ---------- */
+  function shareWhatsApp(e) {
+    e.preventDefault();
+    const name = nameInput.value.trim();
+    const contact = contactInput.value.trim();
+    const age = ageInput.value.trim();
+    const loc = locationInput.value.trim();
+    const desc = descInput.value.trim();
+
+    if (!contact) {
+      showToast('Ingresa un contacto para compartir', 'error');
+      return;
+    }
+
+    const clean = contact.replace(/[^0-9]/g, '');
+    if (!clean) {
+      showToast('El contacto debe contener un número de teléfono', 'error');
+      return;
+    }
+
+    const lines = [
+      `🔍 *BUSCO A ${name.toUpperCase()}*`,
+    ];
+    if (age) lines.push(`Edad: ${age}`);
+    if (loc) lines.push(`📍 ${loc}`);
+    lines.push(`📞 Contacto: ${contact}`);
+    if (desc) lines.push('', desc);
+    lines.push('', 'Generado con Fichas RRSS - Build4Venezuela');
+
+    const text = lines.join('\n');
+    window.open(`https://wa.me/${clean}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+    showToast('Abriendo WhatsApp...', 'success');
+  }
+
   /* ---------- Reset ---------- */
   function resetForm() {
     form.reset();
@@ -517,6 +587,7 @@
 
   downloadBtn.addEventListener('click', downloadPNG);
   copyBtn.addEventListener('click', copyImage);
+  whatsappBtn.addEventListener('click', shareWhatsApp);
   resetBtn.addEventListener('click', resetForm);
 
   /* Clear field errors on input */
